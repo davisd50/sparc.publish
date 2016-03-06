@@ -1,0 +1,28 @@
+Sparc annotatable publisher
+----------------------------
+A simple publisher for annotatable objects
+
+Configure environment for tesing
+>>> from sparc.publish import ConfigureTest
+>>> from zope.component.eventtesting import setUp, getEvents
+>>> ConfigureTest()
+>>> setUp() # tracks events for testing
+
+Create an entity that will be published
+>>> from zope.component import createObject
+>>> entity = createObject(u'sparc.entity.entity', id='entity1')
+
+Publish the entity
+>>> from sparc.publish import IPublisher
+>>> from sparc.publish import IPublishEvent
+>>> IPublisher(entity).published()
+False
+>>> getEvents(IPublishEvent)
+[]
+
+Now publish and verify
+>>> IPublisher(entity).publish()
+>>> len(getEvents(IPublishEvent))
+1
+>>> IPublisher(entity).published()
+True
