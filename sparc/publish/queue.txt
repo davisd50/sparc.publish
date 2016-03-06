@@ -18,6 +18,11 @@ Create a queue
 >>> zc_queue = Queue()
 >>> queue = IPublisherQueue(zc_queue)
 
+The queue has not yet been published
+>>> from sparc.publish import IPublisherQueuePublishedEvent
+>>> getEvents(IPublisherQueuePublishedEvent)
+[]
+
 Add invalid item into the queue
 >>> try:
 ...     queue.enqueue(object())
@@ -36,3 +41,5 @@ Publish the queue
 >>> queue.publish()
 >>> IPublisher(entity).published()
 True
+>>> len(getEvents(IPublisherQueuePublishedEvent))
+1

@@ -1,9 +1,11 @@
 from zope.component import adapts
 from zope.component import queryAdapter
+from zope.event import notify
 from zope.interface import implements
 from zc.queue.interfaces import IQueue
 from sparc.publish import IPublisher
 from sparc.publish import IPublisherQueue
+from sparc.publish.events import PublisherQueuePublishedEvent
 
 class PublisherQueueForZCQueue(object):
     """A queue of objects that can be published"""
@@ -25,3 +27,4 @@ class PublisherQueueForZCQueue(object):
         while self.context:
             item = self.context.pull()
             IPublisher(item).publish()
+        notify(PublisherQueuePublishedEvent(self))
