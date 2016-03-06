@@ -34,6 +34,7 @@ setup(name='sparc.publish',
       install_requires=[
           'setuptools',
           'persistent',
+          'transaction',
           'zope.interface',
           'zope.component',
           'zope.annotation',

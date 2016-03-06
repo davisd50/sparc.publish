@@ -38,8 +38,10 @@ Add entity into the queue
 False
 
 Publish the queue
+>>> getEvents(IPublisherQueuePublishedEvent)
+[]
 >>> queue.publish()
 >>> IPublisher(entity).published()
 True
->>> len(getEvents(IPublisherQueuePublishedEvent))
-1
+>>> len(getEvents(IPublisherQueuePublishedEvent)) > 0
+True

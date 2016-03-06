@@ -1,3 +1,5 @@
+import transaction
+from ZODB.POSException import ConflictError
 from zope.component import adapts
 from zope.component import queryAdapter
 from zope.event import notify
@@ -8,7 +10,10 @@ from sparc.publish import IPublisherQueue
 from sparc.publish.events import PublisherQueuePublishedEvent
 
 class PublisherQueueForZCQueue(object):
-    """A queue of objects that can be published"""
+    """A queue of objects that can be published
+    
+    This adapter allows for a thread-safe, concurrent-safe ZODB-based queue
+    """
     implements(IPublisherQueue)
     adapts(IQueue)
     
@@ -20,11 +25,19 @@ class PublisherQueueForZCQueue(object):
         """Add object into the queue"""
         if not queryAdapter(item, IPublisher):
             raise TypeError('could not adapt.  expected item to be adaptable to IPublisher')
-        self.context.put(item)
+        try:
+            self.context.put(item)
+            transaction.savepoint() #subtransaction to verify item could be added
+        except ConflictError:
+            pass # item is already in queue...so we'll silently ignore
 
     def publish(self):
         """Publish each queued object and empty queue"""
         while self.context:
-            item = self.context.pull()
-            IPublisher(item).publish()
+            try:
+                item = self.context.pull()
+                transaction.savepoint()
+                IPublisher(item).publish()
+            except ConflictError:
+                pass # item was already pulled...so we'll silently ignore
         notify(PublisherQueuePublishedEvent(self))

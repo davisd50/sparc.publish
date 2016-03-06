@@ -22,7 +22,7 @@ False
 
 Now publish and verify
 >>> IPublisher(entity).publish()
->>> len(getEvents(IPublishEvent))
-1
+>>> len(getEvents(IPublishEvent)) > 0
+True
 >>> IPublisher(entity).published()
 True
