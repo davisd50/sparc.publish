@@ -1,0 +1,38 @@
+Sparc publisher queue
+----------------------------
+A simple queue publisher based on zc.queue
+
+Configure environment for tesing
+>>> from sparc.publish import ConfigureTest
+>>> from zope.component.eventtesting import setUp, getEvents
+>>> ConfigureTest()
+>>> setUp() # tracks events for testing
+
+Create an entity that will be published
+>>> from zope.component import createObject
+>>> entity = createObject(u'sparc.entity.entity', id='entity1')
+
+Create a queue
+>>> from sparc.publish import IPublisher, IPublisherQueue
+>>> from zc.queue import Queue
+>>> zc_queue = Queue()
+>>> queue = IPublisherQueue(zc_queue)
+
+Add invalid item into the queue
+>>> try:
+...     queue.enqueue(object())
+...     assert(False)
+... except TypeError:
+...     assert(True)
+
+Add entity into the queue
+>>> queue.enqueue(entity)
+>>> len(zc_queue)
+1
+>>> IPublisher(entity).published()
+False
+
+Publish the queue
+>>> queue.publish()
+>>> IPublisher(entity).published()
+True

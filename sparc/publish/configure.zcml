@@ -8,5 +8,11 @@
     	provides="sparc.publish.IPublisher"
     	factory=".publisher.PublisherForAnnotableObjects"
     	/>
+    
+    <adapter
+    	for="zc.queue.interfaces.IQueue"
+    	provides="sparc.publish.IPublisherQueue"
+    	factory=".queue.PublisherQueueForZCQueue"
+    	/>
 
 </configure>
