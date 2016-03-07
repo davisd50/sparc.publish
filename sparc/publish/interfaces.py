@@ -19,4 +19,5 @@ class IPublisherQueue(Interface):
     def enqueue(object_):
         """Add object into the queue.  Objects must be adaptable to IPublisher"""
     def publish():
-        """Publish each queued object and empty queue.  Dispatches IPublisherQueuePublishedEvent """
+        """Publish each queued object and empty queue.  Dispatches 
+        IPublisherQueuePublishedEvent.  Returns sequence of items published"""

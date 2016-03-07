@@ -27,17 +27,23 @@ class PublisherQueueForZCQueue(object):
             raise TypeError('could not adapt.  expected item to be adaptable to IPublisher')
         try:
             self.context.put(item)
-            transaction.savepoint() #subtransaction to verify item could be added
-        except ConflictError:
-            pass # item is already in queue...so we'll silently ignore
+            transaction.commit()
+        except ConflictError: # queue concurrency exception...expected
+            transaction.abort() # exception means item is already queued...nothing to do
 
     def publish(self):
         """Publish each queued object and empty queue"""
+        _return = []
         while self.context:
             try:
                 item = self.context.pull()
-                transaction.savepoint()
+                transaction.commit()
                 IPublisher(item).publish()
-            except ConflictError:
-                pass # item was already pulled...so we'll silently ignore
+                _return.append(item)
+            except ConflictError: # queue concurrency exception...expected
+                transaction.abort()
+            except Exception:
+                if item:
+                    self.enqueue(item) # add item back into queue for publishing exceptions
         notify(PublisherQueuePublishedEvent(self))
+        return _return

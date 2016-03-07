@@ -16,7 +16,7 @@ class PublisherForAnnotableObjects(object):
     def __init__(self, context):
         self.context = context
         self.annotations = IAnnotations(context).\
-                                setdefault('IPublisher', OOBTree())
+                                setdefault('IPublisher', {})
         if 'published' not in self.annotations:
             self.annotations['published'] = False
     
