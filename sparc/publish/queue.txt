@@ -40,7 +40,8 @@ False
 Publish the queue
 >>> getEvents(IPublisherQueuePublishedEvent)
 []
->>> queue.publish()
+>>> len(queue.publish())
+1
 >>> IPublisher(entity).published()
 True
 >>> len(getEvents(IPublisherQueuePublishedEvent)) > 0
