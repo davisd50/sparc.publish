@@ -42,6 +42,9 @@ setup(name='sparc.publish',
           'sparc.entity' # testing
           # -*- Extra requirements: -*-
       ],
+      tests_require=[
+          'sparc.testing'
+      ],
       entry_points="""
       # -*- Entry points: -*-
       """,
