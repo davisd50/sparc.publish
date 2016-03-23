@@ -5,9 +5,13 @@ from zope.component import queryAdapter
 from zope.event import notify
 from zope.interface import implements
 from zc.queue.interfaces import IQueue
+from sparc.publish import RecoverablePublishingError
 from sparc.publish import IPublisher
 from sparc.publish import IPublisherQueue
 from sparc.publish.events import PublisherQueuePublishedEvent
+
+from sparc.logging import logging
+logger = logging.getLogger(__name__)
 
 class PublisherQueueForZCQueue(object):
     """A queue of objects that can be published
@@ -38,12 +42,23 @@ class PublisherQueueForZCQueue(object):
             try:
                 item = self.context.pull()
                 transaction.commit()
-                IPublisher(item).publish()
-                _return.append(item)
             except ConflictError: # queue concurrency exception...expected
                 transaction.abort()
-            except Exception:
+                if logger.getEffectiveLevel() == logging.DEBUG:
+                    logger.exception("ConflictError while publishing queue, " +\
+                        "transaction aborted.  This error is an expected " +\
+                        "runtime condition and does not necessarily " +\
+                        "indicate an application issue")
+                continue # skip to next loop
+            # TODO: Add tests for re-queing on publishing errors
+            try:
+                IPublisher(item).publish()
+                _return.append(item)
+            except RecoverablePublishingError:
                 if item:
                     self.enqueue(item) # add item back into queue for publishing exceptions
+                logger.exception("A recoverable publishing error has occured "+\
+                                 "for queued item %s.  The item will be " +\
+                                 "added back in the publishing queue." )
         notify(PublisherQueuePublishedEvent(self))
         return _return
