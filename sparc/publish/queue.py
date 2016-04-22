@@ -32,8 +32,14 @@ class PublisherQueueForZCQueue(object):
         try:
             self.context.put(item)
             transaction.commit()
-        except ConflictError: # queue concurrency exception...expected
+        except ConflictError,e : # queue concurrency exception...expected
+            if logger.getEffectiveLevel() == logging.DEBUG:
+                logger.exception("ConflictError while publishing queue, " +\
+                        "transaction aborted.  This error is an expected " +\
+                        "runtime condition and does not necessarily " +\
+                        "indicate an application issue")
             transaction.abort() # exception means item is already queued...nothing to do
+            raise e
 
     def publish(self):
         """Publish each queued object and empty queue"""
@@ -43,12 +49,14 @@ class PublisherQueueForZCQueue(object):
                 item = self.context.pull()
                 transaction.commit()
             except ConflictError: # queue concurrency exception...expected
-                transaction.abort()
                 if logger.getEffectiveLevel() == logging.DEBUG:
                     logger.exception("ConflictError while publishing queue, " +\
                         "transaction aborted.  This error is an expected " +\
                         "runtime condition and does not necessarily " +\
                         "indicate an application issue")
+                transaction.abort()
+                """If we plan on reusing this database session we must create a new transaction"""
+                self.connection.newTransaction()
                 continue # skip to next loop
             # TODO: Add tests for re-queing on publishing errors
             try:
